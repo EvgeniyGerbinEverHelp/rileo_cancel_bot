@@ -13,10 +13,10 @@ class UserStatus(Enum):
 
 
 def extract_emails(text: str) -> list[str]:
-    """Все уникальные email из текста (с сохранением порядка)."""
+    """Все уникальные email из текста, приведённые к нижнему регистру."""
     if not text:
         return []
-    return list(dict.fromkeys(_EMAIL_RE.findall(text)))
+    return list(dict.fromkeys(m.lower() for m in _EMAIL_RE.findall(text)))
 
 
 def check_user_status(email: str, text: str) -> tuple[UserStatus, str | None]:
@@ -26,6 +26,10 @@ def check_user_status(email: str, text: str) -> tuple[UserStatus, str | None]:
     ALTERNATIVE_EMAIL_FOUND -> payload = найденный альтернативный email
     NOT_FOUND               -> payload = None
     """
+    # Email регистронезависим (BRD): всегда работаем в нижнем регистре, чтобы
+    # подписки под одним email в разных регистрах считались одной и той же.
+    email = (email or "").strip().lower()
+
     customer_id = get_customer_id_by_email(email)
     if customer_id:
         print(f"✅ User found by primary email: {email}")
@@ -34,7 +38,7 @@ def check_user_status(email: str, text: str) -> tuple[UserStatus, str | None]:
     # Основной email не найден — ищем альтернативные в теме и тексте письма.
     print(f"⚠️ Primary email '{email}' not found — searching alternative emails...")
     for alt in extract_emails(text):
-        if alt.lower() == (email or "").lower():
+        if alt == email:
             continue
         if get_customer_id_by_email(alt):
             print(f"✅ Alternative email found in Solidgate DB: {alt}")
