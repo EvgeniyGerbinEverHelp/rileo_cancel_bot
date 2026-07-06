@@ -66,13 +66,23 @@ def update_ticket(
     headers = {"Content-Type": "application/json", "Connection": "close"}
     ticket: dict = {}
 
+    bot_agent = settings.BOT_AGENT_ID
+
     if public_reply:
         ticket["comment"] = {"html_body": public_reply, "public": True}
+        if bot_agent:
+            # Ответ клиенту публикуется от имени агента-бота.
+            ticket["comment"]["author_id"] = bot_agent
         if assignee != "remove":
-            ticket["assignee_email"] = settings.ZD_EMAIL
+            if bot_agent:
+                ticket["assignee_id"] = bot_agent
+            else:
+                ticket["assignee_email"] = settings.ZD_EMAIL
             ticket["status"] = ticket_status or "pending"
     elif internal_note:
         ticket["comment"] = {"body": internal_note, "public": False}
+        if bot_agent:
+            ticket["comment"]["author_id"] = bot_agent
 
     if assignee == "remove":
         # Эскалация: снять назначение на бота, оставить тикет видимым агентам.

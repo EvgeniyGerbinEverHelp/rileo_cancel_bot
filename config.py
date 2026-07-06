@@ -16,6 +16,11 @@ class Settings(BaseSettings):
     PRODUCT_VALUE: str = ""
     GROUP_ID: str = ""
 
+    # ID агента-бота в Zendesk. Если задан — бот ассайнит тикет на этого агента
+    # и публикует комментарии от его имени (author_id). Пусто (0) -> старое
+    # поведение: ассайн через ZD_EMAIL, автор комментария = владелец токена.
+    BOT_AGENT_ID: int = 0
+
     # --- Solidgate ---
     SOLIDGATE_PUBLIC_KEY: str = ""
     SOLIDGATE_SECRET_KEY: str = ""
