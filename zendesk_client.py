@@ -59,6 +59,7 @@ def update_ticket(
     assignee: str | None = None,  # None | "remove"
     ticket_status: str | None = None,
     group_id: str | None = None,
+    brand_id: str | int | None = None,
     custom_fields: list | None = None,
 ):
     """Обновляет тикет в Zendesk: комментарий, статус, assignee, группа, поля, теги."""
@@ -93,6 +94,8 @@ def update_ticket(
 
     if group_id:
         ticket["group_id"] = int(group_id)
+    if brand_id:
+        ticket["brand_id"] = int(brand_id)
     if custom_fields:
         ticket["custom_fields"] = custom_fields
 
@@ -134,4 +137,5 @@ def escalate_ticket(ticket_id: int, internal_note: str, extra_tags: list | None 
         internal_note=internal_note,
         assignee="remove",
         group_id=settings.GROUP_ID or None,
+        brand_id=settings.BRAND_ID or None,
     )

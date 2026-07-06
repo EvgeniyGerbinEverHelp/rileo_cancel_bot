@@ -21,6 +21,11 @@ class Settings(BaseSettings):
     # поведение: ассайн через ZD_EMAIL, автор комментария = владелец токена.
     BOT_AGENT_ID: int = 0
 
+    # ID бренда Zendesk (нативное поле ticket.brand_id). Если задан — бот
+    # проставляет бренд тикету при завершении/эскалации. На ruutsupport заменяет
+    # отсутствующее поле Product. Пусто (0) -> бренд не трогаем.
+    BRAND_ID: int = 0
+
     # --- Solidgate ---
     SOLIDGATE_PUBLIC_KEY: str = ""
     SOLIDGATE_SECRET_KEY: str = ""

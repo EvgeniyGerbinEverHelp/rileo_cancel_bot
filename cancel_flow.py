@@ -146,6 +146,7 @@ def _send_macro(ticket_id: int, macro: dict, macro_tag: str):
             public_reply=text,
             ticket_status="solved",
             group_id=settings.GROUP_ID or None,
+            brand_id=settings.BRAND_ID or None,
             custom_fields=_custom_fields(),
         )
     except Exception as e:
