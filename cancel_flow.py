@@ -157,6 +157,8 @@ def _send_macro(ticket_id: int, macro: dict, macro_tag: str):
             ticket_id,
             tags_to_add=tags + ["bot_escalated"],
             assignee="remove",
+            # Тикет мог уже уйти в Solved — форсим Open, иначе агенты его не увидят.
+            ticket_status="open",
         )
 
 

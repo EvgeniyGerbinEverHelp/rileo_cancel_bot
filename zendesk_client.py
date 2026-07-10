@@ -87,8 +87,12 @@ def update_ticket(
 
     if assignee == "remove":
         # Эскалация: снять назначение на бота, оставить тикет видимым агентам.
+        # Статус НЕ форсим: свежий тикет должен остаться в New, а тикет, куда
+        # вернулся клиент, Zendesk сам переводит в Open. Явный ticket_status
+        # уважаем (им пользуется путь частичного сбоя в cancel_flow).
         ticket["assignee_id"] = None
-        ticket["status"] = "open"
+        if ticket_status:
+            ticket["status"] = ticket_status
     elif ticket_status and "status" not in ticket:
         ticket["status"] = ticket_status
 
