@@ -7,7 +7,8 @@ from solidgate_client import (
     get_customer_subscriptions,
     parse_subscription,
 )
-from zendesk_client import escalate_ticket, update_ticket
+from name_resolver import personalize, resolve_first_name
+from zendesk_client import escalate_ticket, get_requester_name, update_ticket
 
 # Теги-макросы из таблицы (вкладка Macros)
 TAG_STEP_1 = "rileo_cancellation_bot"               # Step 1.1 Cancel
@@ -38,7 +39,7 @@ def _is_cancelled(sub: dict) -> bool:
     return bool(sub.get("cancelled_at") or sub.get("cancellation_requested_at"))
 
 
-def execute_cancel_flow(ticket_id: int, customer_id: str):
+def execute_cancel_flow(ticket_id: int, customer_id: str, ticket_text: str = ""):
     """Cancel Subscription Flow (5.2.1 / 5.2.2)."""
     print(f"🚀 Cancel flow for customer {customer_id}")
     subs = get_customer_subscriptions(customer_id)
@@ -87,7 +88,7 @@ def execute_cancel_flow(ticket_id: int, customer_id: str):
                 ),
             )
             return
-        _send_macro(ticket_id, macro, TAG_STEP_2)
+        _send_macro(ticket_id, macro, TAG_STEP_2, ticket_text)
         return
 
     # --- Co-pilot: только описываем предполагаемое действие, ничего не отменяем ---
@@ -111,7 +112,7 @@ def execute_cancel_flow(ticket_id: int, customer_id: str):
     # коду ответа: Solidgate может вернуть 200, фактически не отменив подписку.
     if _verify(customer_id, [sid for sid, _ in to_cancel]):
         print("✅ Cancellation confirmed")
-        _send_macro(ticket_id, MACROS_DB.get(TAG_STEP_1, {}), TAG_STEP_1)
+        _send_macro(ticket_id, MACROS_DB.get(TAG_STEP_1, {}), TAG_STEP_1, ticket_text)
     else:
         ids = ", ".join(sid for sid, _ in to_cancel)
         print(f"❌ Cancellation NOT confirmed for: {ids}")
@@ -135,9 +136,13 @@ def _verify(customer_id: str, sub_ids: list[str]) -> bool:
     return True
 
 
-def _send_macro(ticket_id: int, macro: dict, macro_tag: str):
+def _send_macro(ticket_id: int, macro: dict, macro_tag: str, ticket_text: str = ""):
     """Отправляет ответ-макрос клиенту и решает тикет (Step 1.1 / 1.2)."""
     text = macro.get("text") or "Your subscription has been cancelled."
+    # Имя подставляем сами: плейсхолдер Zendesk тянет ник/email из профиля.
+    first_name = resolve_first_name(ticket_text, get_requester_name(ticket_id))
+    print(f"👤 Greeting name for #{ticket_id}: {first_name or '(обезличенное)'}")
+    text = personalize(text, first_name)
     tags = [macro_tag, "bot_started", "bot_finished"]
     try:
         update_ticket(

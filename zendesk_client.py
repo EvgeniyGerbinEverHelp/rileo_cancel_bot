@@ -50,6 +50,28 @@ def _tags_request(method: str, url: str, tags: list, max_retries: int = 3):
         raise last_exc
 
 
+def get_requester_name(ticket_id: int) -> str | None:
+    """Имя реквестера из профиля Zendesk.
+
+    Может быть ником или email — пригодность проверяет name_resolver.
+    None при любой ошибке: приветствие тогда просто останется обезличенным.
+    """
+    try:
+        res = _session.get(f"{BASE_URL}/tickets/{ticket_id}.json", auth=_auth(), timeout=30)
+        res.raise_for_status()
+        requester_id = (res.json().get("ticket") or {}).get("requester_id")
+        if not requester_id:
+            return None
+        res = _session.get(
+            f"{BASE_URL}/users/{requester_id}.json", auth=_auth(), timeout=30
+        )
+        res.raise_for_status()
+        return (res.json().get("user") or {}).get("name")
+    except requests.exceptions.RequestException as e:
+        print(f"⚠️ Could not fetch requester name for #{ticket_id}: {e}")
+        return None
+
+
 def update_ticket(
     ticket_id: int,
     tags_to_add: list | None = None,

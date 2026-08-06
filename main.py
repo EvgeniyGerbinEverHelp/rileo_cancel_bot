@@ -45,7 +45,7 @@ def process_ticket(payload: TicketPayload):
     status, data = check_user_status(payload.requester_email, full_text)
 
     if status == UserStatus.FOUND:
-        execute_cancel_flow(ticket_id, data)
+        execute_cancel_flow(ticket_id, data, full_text)
         return
 
     if status == UserStatus.ALTERNATIVE_EMAIL_FOUND:
